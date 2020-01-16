@@ -64,7 +64,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
     '''
     @Help functions:
-
+    set_status_code: set given code and corresponding msg to header
+    set_header: set given key and value to header
+    get_content: get content from given path, or not_found_msg if path is not given
+    set_path: check if path is ending with '/' and return a corrected path
+    process_request: get request, return response
     '''
 
     def set_status_code(self, code):
