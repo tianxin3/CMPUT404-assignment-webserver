@@ -86,10 +86,15 @@ class MyWebServer(socketserver.BaseRequestHandler):
         #Debug use
         print("Response header: " + header_pattern.format(key, value))
 
-    def get_content(self, file_path):
-        
+    def get_content(self, file_path=None):
+
         # Content-Type, the only key we used for this assignment
         key = "Content-Type"
+
+        # If file_path is None, the file is not valid and response 404 not found
+        if file_path == None:
+            self.set_header(key, "text/html")
+            return self.not_found_msg
 
         # Get extension of file
         # Reference: https://stackoverflow.com/questions/541390/extracting-extension-from-filename-in-python
@@ -110,8 +115,26 @@ class MyWebServer(socketserver.BaseRequestHandler):
     def set_path(self, url):
 
         # Init path where index.html and base.css is
-        path = os.curdir + "/www/"
+        path = os.curdir + "/www/" + url
 
+        # Check if path ending with '/'
+        if os.path.isdir(path):
+            if path[-1] != '/':
+                path += '/'
+                self.set_status_code(301)
+
+        
+        # If path is a valid path, add index.html to path
+        if os.path.isdir(path):
+            path += "index.html"
+
+        # Normalize path
+        # Reference: https://docs.python.org/3.3/library/os.path.html?highlight=path
+        newPath = os.path.normcase(path)
+        # Remove redundant separators
+        newPath = os.path.normpath(newPath)
+
+        return newPath 
 
     def process_request(self, request_data):
 
@@ -123,22 +146,41 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
         # Split by '\r\n\' to get the request method & URL
         request_line = request_data.split("\r\n")[0].split(" ")
+        print(request_line)
         request_method = request_line[0]
-        request_url = request_line[1]
+        request_url = ""
+        if len(request_line) > 1:
+            request_url = request_line[1]
 
         # Check if method is GET, if not, report to client cannot handle
         if "GET" not in request_method:
             self.set_status_code(405)
             return
 
-        self.set_path(request_url)
-
+        # Check path by calling set_path
+        newPath = self.set_path(request_url)
+        print("Path is:  " + newPath)
+        # Set content
+        if os.path.isfile(newPath):
+            self.set_status_code(200)
+            file_content = self.get_content(newPath)
+        else:
+            self.set_status_code(404)
+            file_content = self.get_content()
+        
+        # Send response to client
+        response_msg = "{} \r\n {}".format(self.responseHeader, file_content)
+        
+        return response_msg
 
 
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
-        self.request.sendall(bytearray("OK",'utf-8'))
+        # print ("Got a request of: %s\n" % self.data)
+        # self.request.sendall(bytearray("OK",'utf-8'))
+
+        response_msg = self.process_request(self.data)
+        self.request.sendall(response_msg.encode('utf-8'))
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
