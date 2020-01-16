@@ -95,12 +95,13 @@ class MyWebServer(socketserver.BaseRequestHandler):
         # Reference: https://stackoverflow.com/questions/541390/extracting-extension-from-filename-in-python
         file_type = os.path.splitext(file_path)[1]
 
+        # Set header for based on corresponding type of file
         if 'html' in file_type:
             self.set_header(key, "text/html")
-        
         if 'css' in file_type:
             self.set_header(key, "text/css")
 
+        # Read content from file
         with open(file_path, "r") as file:
             file_content = file.read()
 
