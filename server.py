@@ -159,7 +159,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
         # Check if method is GET, if not, report to client cannot handle
         if "GET" not in request_method:
             self.set_status_code(405)
-            return
+            return "{}\r\n".format(self.responseHeader)
 
         # Check path by calling set_path
         newPath = self.set_path(request_url)
@@ -173,7 +173,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
             file_content = self.get_content()
         
         # Send response to client
-        response_msg = "{} \r\n {}".format(self.responseHeader, file_content)
+        response_msg = "{}\r\n{}".format(self.responseHeader, file_content)
         
         return response_msg
 
@@ -184,6 +184,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
         # self.request.sendall(bytearray("OK",'utf-8'))
 
         response_msg = self.process_request(self.data)
+        if response_msg == None:
+            return
         self.request.sendall(response_msg.encode('utf-8'))
 
 if __name__ == "__main__":
