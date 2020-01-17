@@ -39,6 +39,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
     httpVersion: the http version used for server
     requestMethod: only get method will be handled
     '''
+
     responseHeader = ""
     responseContent = ""
     statusCode = {200:"OK",
@@ -46,7 +47,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
                     404:"NOT FOUND",
                     405:"METHOD NOT ALLOWED"}
     httpVersion = "HTTP/1.1"
-    requestMethod = "GET"
+    requestMethod = ["GET"]
     not_found_msg = '''
                 <!DOCTYPE html>
                 <html>
@@ -118,15 +119,21 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
     def set_path(self, url):
 
-        # Init path where index.html and base.css is
-        path = os.curdir + "/www/" + url
+                
+        # Init path, serve files in './www/'
+        path = os.curdir + "/www" + url
+        print("PATH: {}, URL: {}".format(path,url))
+        path = path.replace("www/www", "www")
+        print(os.path.isdir(path))
 
         # Check if path ending with '/'
         if os.path.isdir(path):
             if path[-1] != '/':
-                path += '/'
+                url += '/'
+                print("REDIRECT:   " + url)
                 self.set_status_code(301)
-
+                self.responseHeader += "Location: {}\r\n".format(url)
+                return None
         
         # If path is a valid path, add index.html to path
         if os.path.isdir(path):
@@ -163,7 +170,12 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
         # Check path by calling set_path
         newPath = self.set_path(request_url)
+        file_content = None
+        if newPath == None:
+            response_msg = "{}\r\n{}".format(self.responseHeader, file_content)
+            return response_msg
         print("Path is:  " + newPath)
+
         # Set content
         if os.path.isfile(newPath):
             self.set_status_code(200)
