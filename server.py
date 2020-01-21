@@ -111,6 +111,9 @@ class MyWebServer(socketserver.BaseRequestHandler):
         if 'css' in file_type:
             self.set_header(key, "text/css")
 
+        status = str(os.stat(file_path))
+        self.set_header("Content-Length", status)
+        # self.responseHeader += "Content-Length: {}\r\n".format(str(status))
         # Read content from file
         with open(file_path, "r") as file:
             file_content = file.read()
