@@ -135,8 +135,8 @@ class Server():
 
         # Add length of file in bytes at field 'Content-Length'
         # Reference: https://docs.python.org/3/library/stat.html
-        status = str(os.stat(file_path))
-        self.set_header(self.key_length, status)
+        status = os.stat(file_path)
+        self.set_header(self.key_length, str(status.st_size))
 
         # Read content from file
         with open(file_path, "r") as file:
