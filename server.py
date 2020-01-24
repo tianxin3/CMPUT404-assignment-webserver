@@ -144,6 +144,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
         if os.path.isdir(path):
             path += "index.html"
 
+        # Check path sercurity
         root_path = os.getcwd()
         if not os.path.abspath(path).startswith(root_path):
             self.set_status_code(404)
