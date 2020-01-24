@@ -111,8 +111,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
         if 'css' in file_type:
             self.set_header(key, "text/css")
 
-        status = str(os.stat(file_path))
-        self.set_header("Content-Length", status)
+        status = os.stat(file_path)
+        self.set_header("Content-Length", str(status.st_size))
         # self.responseHeader += "Content-Length: {}\r\n".format(str(status))
         # Read content from file
         with open(file_path, "r") as file:
@@ -123,12 +123,13 @@ class MyWebServer(socketserver.BaseRequestHandler):
     def set_path(self, url):
 
                 
+        
         # Init path, serve files in './www/'
         path = os.curdir + "/www" + url
         print("PATH: {}, URL: {}".format(path,url))
         path = path.replace("www/www", "www")
         print(os.path.isdir(path))
-
+        
         # Check if path ending with '/'
         if os.path.isdir(path):
             if path[-1] != '/':
@@ -137,16 +138,23 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 self.set_status_code(301)
                 self.responseHeader += "Location: {}\r\n".format(url)
                 return None
+
         
         # If path is a valid path, add index.html to path
         if os.path.isdir(path):
             path += "index.html"
+
+        root_path = os.getcwd()
+        if not os.path.abspath(path).startswith(root_path):
+            self.set_status_code(404)
+            return None
 
         # Normalize path
         # Reference: https://docs.python.org/3.3/library/os.path.html?highlight=path
         newPath = os.path.normcase(path)
         # Remove redundant separators
         newPath = os.path.normpath(newPath)
+
 
         return newPath 
 
